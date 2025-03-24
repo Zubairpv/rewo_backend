@@ -1,4 +1,4 @@
-import { hash } from "bcrypt";
+import { hash } from "bcryptjs";
 
 /**
  * @param { import("knex").Knex } knex
