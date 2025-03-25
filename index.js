@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import adminRoutes from "./routes/adminRoutes.js";
 import path from "path";
 import buyerRoutes from "./routes/buyerRoutes.js";
-import cors from "cors";
+
 import supplierRoutes from "./routes/supplierRoutes.js";
 import transporterRoutes from "./routes/transportRoutes.js";
 // import multer from "multer";
@@ -16,14 +16,6 @@ app.use(
   express.static(path.join(process.cwd(), "storage/material"))
   
 );
-app.use(cors());
-
-// OR Allow specific origins
-app.use(cors({
-  origin: 'http://localhost:62551', // Allow only this frontend
-  methods: 'GET,POST,PUT,DELETE',
-  allowedHeaders: 'Content-Type, Authorization'
-}));
 
 // // Set up storage for uploaded images
 // const storage = multer.diskStorage({
