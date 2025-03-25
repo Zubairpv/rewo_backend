@@ -25,7 +25,7 @@ export const validateAdminLogin = (req, res, next) => {
     return res.status(400).json({
       success: false,
       data: {},
-      message: "user_name and password are required",
+      message: "user_name and password are required",user_name,password
     });
   }
 
