@@ -20,7 +20,7 @@ app.use(cors());
 
 // OR Allow specific origins
 app.use(cors({
-  origin: 'http://localhost:62551', // Allow only this frontend
+  origin: 'http://localhost', // Allow only this frontend
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type, Authorization'
 }));
