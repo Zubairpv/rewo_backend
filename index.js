@@ -20,9 +20,10 @@ app.use(cors());
 
 // OR Allow specific origins
 app.use(cors({
-  origin: 'http://localhost', // Allow only this frontend
-  methods: 'GET,POST,PUT,DELETE',
-  allowedHeaders: 'Content-Type, Authorization'
+  origin: [/^http:\/\/localhost(:\d+)?$/], // Allow all localhost ports
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 // // Set up storage for uploaded images
