@@ -56,6 +56,8 @@ export const addMaterial = async (req, res) => {
       }));
       await addMaterialImages(materialId, images, trx);
     }
+    console.log(req.files);
+    
 
     await trx.commit(); // Commit transaction
 
