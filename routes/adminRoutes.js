@@ -10,7 +10,7 @@ import {
   validateAdminLogin,
   verifyToken,
 } from "../middleware/adminAuthMiddleware.js";
-import {  uploadMaterialImages } from "../middleware/uploadImageMiddleware.js";
+import { uploadMaterialImages } from "../middleware/uploadImageMiddleware.js";
 import {
   addMaterial,
   getMaterials,
@@ -24,14 +24,19 @@ const router = express.Router();
 
 // Admin login route
 router.post("/login", validateAdminLogin, loginAdmin);
-router.post("/update-request-status",verifyToken, updateRequestStatus);
+router.post("/update-request-status", verifyToken, updateRequestStatus);
 
 //admin create route
 router.post("/create", validateAdminCreate, createNewAdmin);
 router.post("/forgot-password", requestPasswordReset);
 router.post("/reset-password", resetPassword);
 router.post("/create-material", verifyToken, uploadMaterialImages, addMaterial); // Add Material with Image Upload Middleware
-router.get("/materials/:id?", verifyToken, getMaterials); // Supports both single & list
+router.get(
+  "/materials/:id?",
+
+  // verifyToken,
+  getMaterials
+); // Supports both single & list
 router.put(
   "/materials/:id",
   verifyToken,
@@ -39,6 +44,6 @@ router.put(
   updateMaterialController
 );
 
-router.get("/worksites",verifyToken, listAllWorksitesAdmin);
+router.get("/worksites", verifyToken, listAllWorksitesAdmin);
 
 export default router;
