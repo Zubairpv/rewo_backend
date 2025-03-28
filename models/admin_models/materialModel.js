@@ -87,7 +87,12 @@ export const addMaterialImages = async (materialId, images, trx) => {
 };
 
 export const getAllMaterials = async () => {
-  const materials = await db("materials").select("id", "name", "measurement");
+  const materials = await db("materials").select(
+    "id",
+    "name",
+    "measurement",
+    "description"
+  );
 
   const materialIds = materials.map((m) => m.id);
 
