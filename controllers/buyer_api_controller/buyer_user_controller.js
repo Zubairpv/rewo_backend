@@ -3,6 +3,7 @@ import Buyer from "../../models/buyer_models/buyerModel.js";
 import Location from "../../models/locationModel.js";
 import RegistrationRequest from "../../models/RequestModel.js";
 import db from "../../config/db.js";
+import { log } from "console";
 export async function registerBuyer(req, res) {
   const trx = await db.transaction();
   try {
@@ -34,6 +35,7 @@ export async function registerBuyer(req, res) {
       longitude,
       address,
       type: "buyer",
+      entity_id: 0,
     });
     console.log(location);
 
@@ -81,6 +83,8 @@ export async function registerBuyer(req, res) {
       error: null,
     });
   } catch (error) {
+    console.log(error);
+
     await trx.rollback();
     res.status(500).json({
       success: false,
@@ -223,6 +227,34 @@ export async function loginBuyer(req, res) {
       data: null,
       message: "Server error",
       error: error.sqlMessage ?? error.message,
+    });
+  }
+}
+export async function getAllBuyers(req, res) {
+  try {
+    // Get pagination parameters from request query
+    let { page, limit } = req.query;
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
+
+    // Fetch data from the model
+    const result = await Buyer.getAllBuyersWithRequests(page, limit);
+
+    // Send response
+    res.status(200).json({
+      success: true,
+      data: result.data,
+      pagination: result.pagination,
+      message: "Buyers fetched successfully",
+      error: null,
+    });
+  } catch (error) {
+    console.error("Error fetching buyers:", error);
+    res.status(500).json({
+      success: false,
+      data: null,
+      message: "Failed to fetch buyers",
+      error: error.message,
     });
   }
 }
