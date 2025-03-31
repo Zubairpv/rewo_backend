@@ -258,6 +258,37 @@ export async function getAllBuyers(req, res) {
     });
   }
 }
+export async function getAllBuyersRequest(req, res) {
+  try {
+    // Get pagination parameters from request query
+    let { page, limit } = req.query;
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
+
+    // Fetch data from the model
+    const result = await RegistrationRequest.getBuyersWithRegistrationRequests(
+      page,
+      limit
+    );
+
+    // Send response
+    res.status(200).json({
+      success: true,
+      data: result.data,
+      pagination: result.pagination,
+      message: "Buyers fetched successfully",
+      error: null,
+    });
+  } catch (error) {
+    console.error("Error fetching buyers:", error);
+    res.status(500).json({
+      success: false,
+      data: null,
+      message: "Failed to fetch buyers",
+      error: error.message,
+    });
+  }
+}
 
 // 📌 Buyer Logout API
 export async function logoutBuyer(req, res) {

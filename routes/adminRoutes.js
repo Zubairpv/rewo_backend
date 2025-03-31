@@ -16,7 +16,7 @@ import {
   getMaterials,
   updateMaterialController,
 } from "../controllers/admin_api_controller/material_controller.js";
-import { getAllBuyers, updateRequestStatus } from "../controllers/buyer_api_controller/buyer_user_controller.js";
+import { getAllBuyers, getAllBuyersRequest, updateRequestStatus } from "../controllers/buyer_api_controller/buyer_user_controller.js";
 import { listAllWorksitesAdmin } from "../controllers/buyer_api_controller/worksite_controller.js";
 import { validateBuyerToken } from "../middleware/buyerAuthMiddleware.js";
 
@@ -45,6 +45,7 @@ router.put(
 );
 router.get("/get-buyers", verifyToken,getAllBuyers);
 
+router.get("/get-buyers-request", verifyToken,getAllBuyersRequest);
 router.get("/worksites", verifyToken, listAllWorksitesAdmin);
 
 export default router;
