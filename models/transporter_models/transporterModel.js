@@ -11,14 +11,14 @@ class TransporterModel {
   }
   static async updateTransporter(transporter_id, transporterData, trx) {
     return trx("transporters")
-        .where({ id: transporter_id })
-        .update(transporterData)
-        .returning("*")
-        .then(rows => rows[0]);  // Return updated transporter
-}
-static async getTransporterById(trx, transporter_id) {
-  return trx("transporters").where({ id: transporter_id }).first();
-}
+      .where({ id: transporter_id })
+      .update(transporterData)
+      .returning("*")
+      .then((rows) => rows[0]); // Return updated transporter
+  }
+  static async getTransporterById(trx, transporter_id) {
+    return trx("transporters").where({ id: transporter_id }).first();
+  }
 
   /**
    * Create a new vehicle
@@ -45,49 +45,53 @@ static async getTransporterById(trx, transporter_id) {
   }
   static async updateVehicle(vehicle_id, vehicleData, trx) {
     return trx("vehicles")
-        .where({ id: vehicle_id })
-        .update(vehicleData)
-        .returning("*")
-        .then(rows => rows[0]);  // Return updated vehicle
-}
+      .where({ id: vehicle_id })
+      .update(vehicleData)
+      .returning("*")
+      .then((rows) => rows[0]); // Return updated vehicle
+  }
 
-static async removeVehicleMaterials(vehicle_id, trx) {
+  static async removeVehicleMaterials(vehicle_id, trx) {
     return trx("vehicle_materials").where({ vehicle_id }).del();
-}
-/**
+  }
+  /**
    * Insert or update multiple vehicle pricing entries
    * @param {Array} priceRanges - List of price range objects [{id, vehicle_id, from, to, price}]
    * @param {object} trx - Database transaction
    */
-static async upsertPricing(priceRanges,transporter_id, trx) {
-  for (const range of priceRanges) {
-    const { id, from, to, price } = range;
+  static async upsertPricing(priceRanges, transporter_id, trx) {
+    for (const range of priceRanges) {
+      const { id, from, to, price } = range;
 
-    if (  !from || !to || !price) {
-      throw new Error("All fields (transporter_id, from, to, price) are required.");
-    }
+      if (!from || !to || !price) {
+        throw new Error(
+          "All fields (transporter_id, from, to, price) are required."
+        );
+      }
 
-    if (id) {
-      // Update existing price range
-      await db("transporter_pricing")
-        .where("id", id)
-        .update({ from, to, price })
-        .transacting(trx);
-    } else {
-      // Insert new price range
-      try {
+      if (id) {
+        // Update existing price range
         await db("transporter_pricing")
-          .insert({ transporter_id, from, to, price })
+          .where("id", id)
+          .update({ from, to, price })
           .transacting(trx);
-      } catch (error) {
-        if (error.code === "ER_DUP_ENTRY") {
-          throw new Error(`Price range (${from}-${to}) for transporter ${transporter_id} already exists.`);
+      } else {
+        // Insert new price range
+        try {
+          await db("transporter_pricing")
+            .insert({ transporter_id, from, to, price })
+            .transacting(trx);
+        } catch (error) {
+          if (error.code === "ER_DUP_ENTRY") {
+            throw new Error(
+              `Price range (${from}-${to}) for transporter ${transporter_id} already exists.`
+            );
+          }
+          throw error;
         }
-        throw error;
       }
     }
   }
-}
 
   /**
    * Upload vehicle documents
@@ -140,10 +144,11 @@ static async upsertPricing(priceRanges,transporter_id, trx) {
       .update({ jwt_token: jwtToken });
   }
 
-  static async findByTokenOrNumber(jwtToken) {
+  static async findByTokenOrNumber(identifier) {
     const transporter = await db("transporters as t")
-      .where("t.contact_number", jwtToken)
-      .orWhere("t.jwt_token", jwtToken)
+      .where("t.contact_number", identifier)
+      .orWhere("t.jwt_token", identifier)
+      .orWhere("t.id", identifier) // Allow searching by ID
       .leftJoin("vehicles as v", "t.id", "v.transporter_id") // Join with vehicles
       .select([
         "t.*",
@@ -176,16 +181,90 @@ static async upsertPricing(priceRanges,transporter_id, trx) {
       .leftJoin("materials as m", "vm.material_id", "m.id")
       .select([
         "m.id as material_id",
-        "m.measurement as measurement",
+        "m.measurement",
         "m.name as material_name",
       ]);
 
+    // Fetch registration request details
     transporter.request = await RegistrationRequest.getRequestByUser(
       db,
       "transporter",
       transporter.id
     );
+
     return transporter;
+  }
+  static async getAllTransporters(page = 1, limit = 10) {
+    const offset = (page - 1) * limit;
+
+    // Fetch transporters without jwt_token
+    const transporters = await db("transporters as t")
+      .select([
+        "t.id",
+        "t.name",
+        "t.contact_number",
+        "t.company_name",
+        "t.location_id",
+        "t.owner_name",
+        "t.owner_contact",
+        "t.registration_status",
+        "t.created_at",
+        "t.updated_at",
+      ])
+      .limit(limit)
+      .offset(offset);
+
+    if (transporters.length === 0)
+      return {
+        success: true,
+        data: [],
+        pagination: { total: 0, page, limit, totalPages: 0 },
+        message: "Transporters fetched successfully",
+        error: null,
+      };
+
+    const transporterIds = transporters.map((t) => t.id);
+
+    // Fetch vehicles related to the transporters
+    const vehicles = await db("vehicles as v")
+      .whereIn("v.transporter_id", transporterIds)
+      .select([
+        "v.transporter_id",
+        "v.id as vehicle_id",
+        "v.vehicle_number",
+        "v.manufacturer",
+        "v.model",
+        "v.load_capacity_volume",
+        "v.load_capacity_weight",
+      ]);
+
+    // Attach vehicles to corresponding transporters
+    const transporterMap = {};
+    transporters.forEach((transporter) => {
+      transporterMap[transporter.id] = { ...transporter, vehicles: [] };
+    });
+
+    vehicles.forEach((vehicle) => {
+      if (transporterMap[vehicle.transporter_id]) {
+        transporterMap[vehicle.transporter_id].vehicles.push(vehicle);
+      }
+    });
+
+    // Convert the object back to an array
+    const resultTransporters = Object.values(transporterMap);
+
+    // Get total count for pagination metadata
+    const [{ total }] = await db("transporters").count("id as total");
+
+    return {
+      data: resultTransporters,
+      pagination: {
+        total: total,
+        page: page,
+        limit: limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }
 

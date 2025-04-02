@@ -162,6 +162,8 @@ export async function updateRequestStatus(req, res) {
       error: null,
     });
   } catch (error) {
+    console.log(error);
+    
     await trx.rollback();
     res
       .status(500)
@@ -276,7 +278,7 @@ export async function getAllBuyersRequest(req, res) {
       success: true,
       data: result.data,
       pagination: result.pagination,
-      message: "Buyers fetched successfully",
+      message: "Buyers Request fetched successfully",
       error: null,
     });
   } catch (error) {
@@ -284,7 +286,7 @@ export async function getAllBuyersRequest(req, res) {
     res.status(500).json({
       success: false,
       data: null,
-      message: "Failed to fetch buyers",
+      message: "Failed to fetch buyers Request",
       error: error.message,
     });
   }

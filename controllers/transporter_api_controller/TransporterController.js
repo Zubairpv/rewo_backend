@@ -9,6 +9,7 @@ import path from "path";
 
 import { unlink } from "fs/promises"; // Correct way to import fs.promises.unlink
 import cloudinary from "../../config/cloudinaryConfig.js";
+import { log } from "console";
 
 class TransporterController {
   /**
@@ -52,6 +53,7 @@ class TransporterController {
         [location_id] = await Location.createLocation(trx, {
           ...location,
           type: "transporter",
+          entity_id: 0,
         });
 
         // Insert new transporter
@@ -132,7 +134,7 @@ class TransporterController {
       if (material_carried && material_carried.length > 0) {
         const vehicleMaterials = material_carried.map((material_id) => ({
           material_id: material_id,
-          vehicle_id: vehicle_id ?? vehicle.id,
+          vehicle_id: vehicle_id ?? vehicle,
         }));
         await TransporterModel.addVehicleMaterials(vehicleMaterials, trx);
       }
@@ -155,6 +157,12 @@ class TransporterController {
       console.log(error);
 
       await trx.rollback();
+      if (error.code === "ER_DUP_ENTRY" || error.code === "23505") {
+        return res.status(400).json({
+          success: false,
+          message: "This vehicle already registered for this transporter",
+        });
+      }
       return res.status(500).json({
         success: false,
         message: "Error registering/updating vehicle",
@@ -191,6 +199,7 @@ class TransporterController {
         "vehicle_left_image",
         "vehicle_right_image",
       ];
+      console.log(req.files);
 
       for (const key of documentKeys) {
         if (req.files[key]) {
@@ -269,7 +278,7 @@ class TransporterController {
         user_id: req.transporter.id,
         status: "pending",
       });
- 
+
       await trx.commit();
       return res.json({
         success: true,
@@ -282,13 +291,19 @@ class TransporterController {
       // Delete uploaded files in case of failure
       for (const oldUrl of storedFilePaths) {
         try {
-          const cloudinaryId = oldUrl.split("/").slice(-2).join("/").replace(/\.[^/.]+$/, "");
+          const cloudinaryId = oldUrl
+            .split("/")
+            .slice(-2)
+            .join("/")
+            .replace(/\.[^/.]+$/, "");
           console.log(`Deleting Cloudinary file: ${cloudinaryId}`);
           await cloudinary.uploader.destroy(cloudinaryId);
         } catch (cloudinaryError) {
-          console.error(`Failed to delete Cloudinary file: ${oldUrl}`, cloudinaryError);
+          console.error(
+            `Failed to delete Cloudinary file: ${oldUrl}`,
+            cloudinaryError
+          );
         }
-      
       }
 
       return res.status(500).json({
@@ -382,10 +397,40 @@ class TransporterController {
         .json({ success: false, message: "Error logging out", error });
     }
   }
+  async getAllTranporters(req, res) {
+    try {
+      // Get pagination parameters from request query
+      let { page, limit } = req.query;
+      page = parseInt(page) || 1;
+      limit = parseInt(limit) || 10;
 
+      // Fetch data from the model
+      const result = await TransporterModel.getAllTransporters(page, limit);
+
+      // Send response
+      res.status(200).json({
+        success: true,
+        data: result.data,
+        pagination: result.pagination,
+        message: "Buyers Request fetched successfully",
+        error: null,
+      });
+    } catch (error) {
+      console.error("Error fetching buyers:", error);
+      res.status(500).json({
+        success: false,
+        data: null,
+        message: "Failed to fetch buyers Request",
+        error: error.message,
+      });
+    }
+  }
   async getTransporterDetails(req, res) {
     try {
-      const transporter = req.transporter; // Middleware attaches this
+      let transporter = req.transporter; // Middleware attaches this
+      if (!transporter) {
+        transporter = await TransporterModel.findByTokenOrNumber(req.params);
+      }
       return res.json({
         success: true,
         data: transporter,

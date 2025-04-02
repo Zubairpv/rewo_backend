@@ -9,8 +9,8 @@ router.post("/register-transporter", TransporterController.registerTransporter);
 router.post("/register-vehicle", TransporterController.registerVehicle);
 router.post(
   "/upload-documents",
-  uploadVehicleDocuments,
   authenticateTransporter,
+  uploadVehicleDocuments,
   TransporterController.uploadDocuments
 );
 router.get(
@@ -20,7 +20,10 @@ router.get(
 );
 
 router.post("/login", TransporterController.loginTransporter);
-router.post("/pricing-upsert", authenticateTransporter,TransporterController.upsertPricing);
-
+router.post(
+  "/pricing-upsert",
+  authenticateTransporter,
+  TransporterController.upsertPricing
+);
 
 export default router;

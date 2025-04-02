@@ -48,6 +48,7 @@ export const uploadSupplierDocuments = multer({
 
 // ✅ Vehicle Documents Upload (Images & Videos)
 export const uploadVehicleDocuments = multer({
+  
   storage: createStorage("vehicles"),
   fileFilter: fileFilter("allFiles"),
   limits: { fileSize: 20 * 1024 * 1024 }, // 20MB max
