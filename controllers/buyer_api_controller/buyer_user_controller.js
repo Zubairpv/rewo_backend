@@ -179,7 +179,7 @@ export async function loginBuyer(req, res) {
     const buyer = await Buyer.getBuyerByContact(contact_number, false);
     if (!buyer) {
       await trx.rollback();
-      return res.status(404).json({
+      return res.status(200).json({
         success: true,
         data: {
           registered: false,
