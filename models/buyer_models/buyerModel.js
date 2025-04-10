@@ -1,32 +1,34 @@
 import db from "../../config/db.js";
 
 class Buyer {
-    static async getBuyerByContact(contact_number, needToken) {
+    static async getBuyerByContact(identifier, needToken = false) {
         const baseSelect = [
-            "buyers.id",
-            "buyers.name",
-            "buyers.contact_number",
-            "buyers.company_name",
-            "buyers.gst_number",
-            "buyers.location_id",
-            "locations.latitude",
-            "locations.longitude",
-            "locations.address"
+          "t.id",
+          "t.name",
+          "t.contact_number",
+          "t.company_name",
+          "t.gst_number",
+          "t.location_id",
+          "l.latitude",
+          "l.longitude",
+          "l.address"
         ];
-    
+      
         if (needToken) {
-            baseSelect.push("buyers.jwt_token");
+          baseSelect.push("t.jwt_token");
         }
-    
-        const buyer = await db("buyers")
-            .leftJoin("locations", "buyers.location_id", "locations.id")
-            .select(baseSelect)
-            .where("buyers.contact_number", contact_number)
-            .first(); // ✅ correct order
-    
+      
+        const buyer = await db("buyers as t")
+          .leftJoin("locations as l", "t.location_id", "l.id")
+          .select(baseSelect)
+          .where("t.contact_number", identifier)
+          .orWhere("t.jwt_token", identifier)
+          .orWhere("t.id", identifier)
+          .first();
+      
         return buyer;
-    }
-    
+      }
+      
     
     static async getAllBuyersWithRequests(page = 1, limit = 10) {
       const offset = (page - 1) * limit;
