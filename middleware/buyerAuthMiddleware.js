@@ -24,7 +24,7 @@ export async function validateBuyerToken(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     mDecoded = decoded;
     // Fetch Buyer Using ID (Not Contact Number)
-    const buyer = await Buyer.getBuyerByContact(decoded.contact_number, true);
+    const buyer = await Buyer.getBuyerByContact(decoded.id, true);
 
     // Debugging (Remove Later)
     console.log("Decoded Token:", decoded);
