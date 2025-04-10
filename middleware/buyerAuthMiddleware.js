@@ -8,6 +8,7 @@ import { body, validationResult } from "express-validator";
  * Ensures the token is valid and matches the one stored in the database
  */
 export async function validateBuyerToken(req, res, next) {
+  let mDecoded;
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
     if (!token) {
@@ -21,9 +22,9 @@ export async function validateBuyerToken(req, res, next) {
 
     // Decode JWT Token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+    mDecoded = decoded;
     // Fetch Buyer Using ID (Not Contact Number)
-    const buyer = await Buyer.getBuyerByContact(decoded.contact_number,true);
+    const buyer = await Buyer.getBuyerByContact(decoded.contact_number, true);
 
     // Debugging (Remove Later)
     console.log("Decoded Token:", decoded);
@@ -55,6 +56,7 @@ export async function validateBuyerToken(req, res, next) {
       success: false,
       data: null,
       message: "Invalid or expired token",
+      mDecoded,
       error: error.message,
     });
   }
