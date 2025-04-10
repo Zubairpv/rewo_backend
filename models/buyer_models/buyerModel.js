@@ -2,28 +2,31 @@ import db from "../../config/db.js";
 
 class Buyer {
     static async getBuyerByContact(contact_number, needToken) {
-        const query = db("buyers")
-            .leftJoin("locations", "buyers.location_id", "locations.id")
-            .select(
-                "buyers.id",
-                "buyers.name",
-                "buyers.contact_number",
-                "buyers.company_name",
-                "buyers.gst_number",
-                "buyers.location_id",
-                "locations.latitude",
-                "locations.longitude",
-                "locations.address"
-            )
-            .where("buyers.contact_number", contact_number)
-            .first();
+        const baseSelect = [
+            "buyers.id",
+            "buyers.name",
+            "buyers.contact_number",
+            "buyers.company_name",
+            "buyers.gst_number",
+            "buyers.location_id",
+            "locations.latitude",
+            "locations.longitude",
+            "locations.address"
+        ];
     
         if (needToken) {
-            query.select("buyers.jwt_token");
+            baseSelect.push("buyers.jwt_token");
         }
     
-        return query;
+        const buyer = await db("buyers")
+            .leftJoin("locations", "buyers.location_id", "locations.id")
+            .select(baseSelect)
+            .where("buyers.contact_number", contact_number)
+            .first(); // ✅ correct order
+    
+        return buyer;
     }
+    
     
     static async getAllBuyersWithRequests(page = 1, limit = 10) {
       const offset = (page - 1) * limit;
