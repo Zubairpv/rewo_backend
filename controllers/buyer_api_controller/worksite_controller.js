@@ -209,9 +209,9 @@ export async function getBuyerWorksites(req, res) {
     await trx.commit();
 
     if (!worksites) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
-        data: null,
+        data: [],
         message: "No worksites found for this buyer",
         error: "No records available",
       });
