@@ -24,6 +24,7 @@ export async function addWorksite(req, res) {
       longitude,
       address,
       type: "site",
+      entity_id: 0,
     });
 
     // Insert worksite
