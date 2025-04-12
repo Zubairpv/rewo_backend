@@ -42,7 +42,9 @@ export async function addWorksite(req, res) {
     await trx.commit();
     res.status(201).json({
       success: true,
-      data: worksite,
+      data: {
+        id:worksite,location_id:location
+      },
       message: "Worksite added successfully",
     });
   } catch (error) {
@@ -78,6 +80,7 @@ export async function editWorksite(req, res) {
     const worksite = await Worksite.getWorksiteById(trx, id);
     if (!worksite) {
       await trx.rollback();
+
       return res.status(404).json({
         success: false,
         data: null,
