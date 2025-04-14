@@ -40,7 +40,7 @@ export async function addWorksite(req, res) {
     await Location.updateLocation(trx, location, { entity_id: worksite });
 
     await trx.commit();
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       data: {
         id:worksite,location_id:location
@@ -81,7 +81,7 @@ export async function editWorksite(req, res) {
     if (!worksite) {
       await trx.rollback();
 
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
         data: null,
         message: "Worksite not found",
